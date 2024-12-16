@@ -83,7 +83,7 @@ end Term
 import Term.*
 
 sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
-  
+
   def extraInfo: Str = this match
     case trm @ (_: Sel | _: SynthSel | _: SelProj) => trm.symbol.mkString
     case _ => ""
@@ -134,7 +134,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Handle(lhs, rhs, defs) => rhs :: defs.flatMap(_.td.subTerms)
     case Neg(e) => e :: Nil
     case Annotated(annotation, target) => annotation :: target :: Nil
-  
+
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
     case t: Ref => t.tree :: Nil
@@ -213,7 +213,7 @@ final case class LetDecl(sym: LocalSymbol, annotations: Ls[Term]) extends Statem
 final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 
 final case class TermDefFlags(isModMember: Bool):
-  def showDbg: Str = 
+  def showDbg: Str =
     val flags = Buffer.empty[String]
     if isModMember then flags += "module"
     flags.mkString(" ")
@@ -269,10 +269,10 @@ sealed abstract class ClassLikeDef extends TypeLikeDef:
 
 
 case class ModuleDef(
-  owner: Opt[InnerSymbol], 
-  sym: ModuleSymbol, 
-  tparams: Ls[TyParam], 
-  paramsOpt: Opt[ParamList], 
+  owner: Opt[InnerSymbol],
+  sym: ModuleSymbol,
+  tparams: Ls[TyParam],
+  paramsOpt: Opt[ParamList],
   kind: ClsLikeKind,
   body: ObjBody,
   annotations: Ls[Term],
@@ -342,17 +342,26 @@ case class TypeDef(
 
 // TODO Store optional source locations for the flags instead of booleans
 final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool):
-  def showDbg: Str = 
+  def showDbg: Str =
     val flags = Buffer.empty[String]
     if mut then flags += "mut"
     if spec then flags += "spec"
     if genGetter then flags += "gen"
     if mod then flags += "module"
     flags.mkString(" ")
+  def addFlags(t: Tree): FldFlags = t match
+    case Tree.Modified(Keyword.`mut`, _, _) => copy(mut = true)
+    case Tree.Modified(Keyword.`spec`, _, _) => copy(spec = true)
+    case _ => this
   override def toString: String = "‹" + showDbg + "›"
 
-object FldFlags { val empty: FldFlags = FldFlags(false, false, false, false) }
+object FldFlags:
+  val empty: FldFlags = FldFlags(false, false, false, false)
 
+  def fromTerm(t: Tree): FldFlags = t match
+    case Tree.Modified(Keyword.`mut`, _, b) => FldFlags(true, false, false).addFlags(b)
+    case Tree.Modified(Keyword.`spec`, _, b) => FldFlags(false, true, false).addFlags(b)
+    case _ => empty
 
 sealed abstract class Elem:
   def subTerms: Ls[Term] = this match
@@ -365,7 +374,6 @@ object PlainFld:
   def unapply(fld: Fld): Opt[Term] = S(fld.term)
 final case class Spd(eager: Bool, term: Term) extends Elem:
   def showDbg: Str = (if eager then "..." else "..") + term.showDbg
-
 
 final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extends Declaration:
   

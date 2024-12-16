@@ -39,13 +39,13 @@ object Elaborator:
   val reservedNames = binaryOps.toSet ++ aliasOps.keySet + "NaN" + "Infinity"
   
   case class Ctx(outer: Opt[InnerSymbol], parent: Opt[Ctx], env: Map[Str, Ctx.Elem]):
-    
+
     def +(local: Str -> Symbol): Ctx = copy(outer, env = env + local.mapSecond(Ctx.RefElem(_)))
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
       copy(outer, env = env ++ locals.mapValues(Ctx.RefElem(_)))
     def elem_++(locals: IterableOnce[Str -> Ctx.Elem]): Ctx =
       copy(outer, env = env ++ locals)
-    
+
     def withMembers(members: Iterable[Str -> MemberSymbol[?]], out: Opt[Symbol] = N): Ctx =
       copy(env = env ++ members.map:
         case (nme, sym) =>
@@ -54,13 +54,13 @@ object Elaborator:
             case N => Ctx.RefElem(sym)
           nme -> elem
       )
-    
+
     def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty)
-    
+
     def get(name: Str): Opt[Ctx.Elem] =
       env.get(name).orElse(parent.flatMap(_.get(name)))
     def getOuter: Opt[InnerSymbol] = outer.orElse(parent.flatMap(_.getOuter))
-    
+
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
     // * and that built-in symbols like Int and Str be imported into another nested context on top of it.
     // * It should not be possible to shadow these built-in symbols, so user code should always be compiled
@@ -106,11 +106,11 @@ object Elaborator:
       def symbol = symOpt
     given Conversion[Symbol, Elem] = RefElem(_)
     val empty: Ctx = Ctx(N, N, Map.empty)
-  
+
   type Ctxl[A] = Ctx ?=> A
-  
+
   transparent inline def ctx(using Ctx): Ctx = summon
-  
+
   class State:
     given State = this
     val suid = new Uid.Symbol.State
@@ -332,7 +332,7 @@ extends Importer:
       val sym = FlowSymbol("‹app-res›")
       val lt = term(lhs, inAppPrefix = true)
       val rt = term(rhs)
-      
+
       // Check if module arguments match module parameters
       val args = rt match
         case Term.Tup(fields) => S(fields)
@@ -361,9 +361,9 @@ extends Importer:
             val paramMod = param.isModuleModifier
             if argMod && !paramMod then raise:
               ErrorReport:
-                msg"Only module parameters may receive module arguments (values)." -> 
+                msg"Only module parameters may receive module arguments (values)." ->
                 arg.toLoc :: Nil
-      
+
       Term.App(lt, rt)(tree, sym)
     case SynthSel(pre, nme) =>
       val preTrm = term(pre)
@@ -498,7 +498,7 @@ extends Importer:
     case Under() =>
       raise(ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil))
       Term.Error
-    case Annotated(lhs, rhs) => 
+    case Annotated(lhs, rhs) =>
       val annotation = lhs match
         case App(_: (Ident | SynthSel | Sel), _) | _: (Ident | SynthSel | Sel) => term(lhs)
         case _ =>
@@ -515,7 +515,7 @@ extends Importer:
       Spd(false, term(trm))
     case Spread(Keyword.`...`, _, S(trm)) =>
       Spd(true, term(trm))
-    case _ => 
+    case _ =>
       val t = term(tree)
       var flags = FldFlags.empty
       if ModuleChecker.evalsToModule(t)
@@ -634,7 +634,7 @@ extends Importer:
             (ctx, acc)
         newCtx.givenIn:
           go(sts, Nil, newAcc)
-      
+
       case (hd @ LetLike(`let`, Apps(id: Ident, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
         val sym =
           fieldOrVarSym(LetBind, id)
@@ -657,24 +657,24 @@ extends Importer:
         reportUnusedAnnotations
         val sym = fieldOrVarSym(HandlerBind, id)
         log(s"Processing `handle` statement $id (${sym}) ${ctx.outer}")
-        
+
         val elabed = block(sts_)._1
-        
+
         elabed.res match
-          case Term.Lit(UnitLit(true)) => 
+          case Term.Lit(UnitLit(true)) =>
           case trm => raise(WarningReport(msg"Terms in handler block do nothing" -> trm.toLoc :: Nil))
-        
+
         val tds = elabed.stats.map {
           case td @ TermDefinition(owner, Fun, sym, params, sign, body, resSym, flags, annotations) =>
             params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
                 val newTd = TermDefinition(owner, Fun, sym, newParams.reverse, sign, body, resSym, flags, annotations)
                 S(HandlerTermDefinition(value.sym, newTd))
-              case _ => 
+              case _ =>
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
                 None
-              
-          case st => 
+
+          case st =>
             raise(ErrorReport(msg"Only function definitions are allowed in handler blocks" -> st.toLoc :: Nil))
             None
         }.collect { case Some(x) => x }
@@ -731,17 +731,17 @@ extends Importer:
               val s = st.map(term(_)(using newCtx))
               val b = rhs.map(term(_)(using newCtx))
               val r = FlowSymbol(s"‹result of ${sym}›")
-              val tdf = TermDefinition(owner, k, sym, pss, s, b, r, 
+              val tdf = TermDefinition(owner, k, sym, pss, s, b, r,
                 TermDefFlags.empty.copy(isModMember = isModMember), annotations)
               sym.defn = S(tdf)
-              
+
               // indicates if the function really returns a module
               val em = b.exists(ModuleChecker.evalsToModule)
               // indicates if the function marks its result as "module"
               val mm = st match
                 case Some(TypeDef(Mod, _, N, N)) => true
                 case _ => false
-              
+
               // checks rules regarding module methods
               s match
                 case N if em => raise:
@@ -761,7 +761,7 @@ extends Importer:
                     msg"Only module methods may return module values." ->
                     td.head.toLoc :: Nil
                 case _ => ()
-              
+
               tdf
             go(sts, Nil, tdf :: acc)
           case L(d) =>
@@ -898,14 +898,14 @@ extends Importer:
       for p <- ps if p._2.flags.mod do p._2.sign match
         case N =>
           raise(ErrorReport(msg"Module parameters must have explicit types." -> t.toLoc :: Nil))
-        case S(ret) if ModuleChecker.isTypeParam(ret) => 
+        case S(ret) if ModuleChecker.isTypeParam(ret) =>
           raise(ErrorReport(msg"Module parameters must have concrete types." -> t.toLoc :: Nil))
         case _ => ()
       ps
     case _ =>
-      t.asParam.map: (isSpd, p, t) =>
-        isSpd -> Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term(_)))
-  
+      t.asParam.map: (isSpd, p, st) =>
+        isSpd -> Param(FldFlags.fromTerm(t), fieldOrVarSym(ParamBind, p), st.map(term))
+
   def params(t: Tree): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>
       val plf = ParamListFlags.empty
@@ -986,17 +986,17 @@ extends Importer:
     while trav.changed do
       trav.changed = false
       go(s)
-  
+
   object ModuleChecker:
-    
+
     /** Checks if a term is a reference to a type parameter. */
     def isTypeParam(t: Term): Bool = t.symbol
       .filter(_.isInstanceOf[VarSymbol])
       .flatMap(_.asInstanceOf[VarSymbol].decl)
       .exists(_.isInstanceOf[TyParam])
-    
+
     /** Checks if a term evaluates to a module value. */
-    def evalsToModule(t: Term): Bool = 
+    def evalsToModule(t: Term): Bool =
       def isModule(t: Tree): Bool = t match
         case TypeDef(Mod, _, _, _) => true
         case _ => false
@@ -1011,7 +1011,7 @@ extends Importer:
         case t => t.symbol match
           case S(sym: BlockMemberSymbol) => sym.modTree.exists(isModule)
           case _ => false
-  
+
   class VarianceTraverser(var changed: Bool = true) extends Traverser:
     override def traverseType(pol: Pol)(trm: Term): Unit = trm match
       case Term.TyApp(lhs, targs) =>
