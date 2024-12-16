@@ -6,6 +6,7 @@ import mlscript.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.semantics.Elaborator
+import hkmc2.semantics.Specialiser
 
 
 abstract class MLsDiffMaker extends DiffMaker:
@@ -39,6 +40,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showParsedTree = DebugTreeCommand("pt")
   val showElab = NullaryCommand("el")
   val showElaboratedTree = DebugTreeCommand("elt")
+  val showSpecialisedTree = DebugTreeCommand("spt")
   val showLoweredTree = NullaryCommand("lot")
   val ppLoweredTree = NullaryCommand("slot")
   val showContext = NullaryCommand("ctx")
@@ -186,7 +188,12 @@ abstract class MLsDiffMaker extends DiffMaker:
     showElaboratedTree.get.foreach: post =>
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
-    processTerm(e, inImport = false)
+    val spec = Specialiser(etl)
+    val spBlk = spec.specialise(e)
+    showSpecialisedTree.get.foreach: post =>
+      output(s"Specialised tree:")
+      output(spBlk.showAsTree(using post))
+    processTerm(spBlk, inImport = false)
       
   
   
