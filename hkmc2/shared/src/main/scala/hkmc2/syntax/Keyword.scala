@@ -62,13 +62,13 @@ object Keyword:
   
   val `if` = Keyword("if", N, nextPrec)
   val `while` = Keyword("while", N, curPrec)
-  
+
   val `case` = Keyword("case", N, curPrec)
-  
+
   val thenPrec = nextPrec
   val `then` = Keyword("then", thenPrec, thenPrec)
   val `do` = Keyword("do", thenPrec, thenPrec)
-  
+
   val `else` = Keyword("else", nextPrec, curPrec)
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
@@ -116,8 +116,9 @@ object Keyword:
   val `throw` = Keyword("throw", N, curPrec)
   val `import` = Keyword("import", N, curPrec)
   val `this` = Keyword("this", N, N)
+  val `spec` = Keyword("spec", N, N) // TODO: check the prec
   val `pattern` = Keyword("pattern", N, N)
-  
+
   // * The lambda operator is special:
   // *  it should associate very strongly on the left and very loosely on the right
   // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`
@@ -125,9 +126,9 @@ object Keyword:
   val `->` = Keyword("->", curPrec, eqPrec)
   
   val __ = Keyword("_", N, N)
-  
+
   val modifiers = Set(
-    `abstract`, mut, virtual, `override`, declare, public, `private`)
+    `abstract`, mut, virtual, `override`, declare, public, `private`, `spec`)
   
   type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type |
     `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type

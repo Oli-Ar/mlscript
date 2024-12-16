@@ -114,7 +114,7 @@ enum Tree extends AutoLocated:
     case Def(lhs, rhs) => lhs :: rhs :: Nil
     case Spread(_, _, body) => body.toList
     case Annotated(annotation, target) => annotation :: target :: Nil
-  
+
   def describe: Str = this match
     case Empty() => "empty"
     case Error() => "<erroneous syntax>"
@@ -153,19 +153,19 @@ enum Tree extends AutoLocated:
     case Spread(_, _, _) => "spread"
     case Annotated(_, _) => "annotated"
     case Open(_) => "open"
-    
+
   def deparenthesized: Tree = this match
     case Bra(BracketKind.Round, inner) => inner.deparenthesized
     case _ => this
-  
+
   def showDbg: Str = toString // TODO
   
   lazy val desugared: Tree = this match
-    
+
     // TODO generalize to pattern-let and rm this special case
     case LetLike(kw, und @ Under(), r, b) =>
       LetLike(kw, Ident("_").withLocOf(und), r, b)
-    
+
     case Modified(Keyword.`declare`, modLoc, s) =>
       // TODO handle `declare` modifier!
       s
@@ -189,7 +189,8 @@ enum Tree extends AutoLocated:
     case Spread(Keyword.`...`, _, S(und: Under)) => S(S(true), new Ident("_").withLocOf(und), N)
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) => S(N, lhs, S(rhs))
     case TermDef(ImmutVal, inner, _) => inner.asParam
-  
+    case Modified(_, _, inner) => inner.param
+
   def isModuleModifier: Bool = this match
     case Tree.TypeDef(Mod, _, N, N) => true
     case _ => false
@@ -214,7 +215,7 @@ object Apps:
   def unapply(t: Tree): S[(Tree, Ls[Tup])] = t match
     case App(Apps(base, args), arg: Tup) => S(base, args :+ arg)
     case t => S(t, Nil)
-    
+
 object PossiblyAnnotated:
   def unapply(t: Tree): Opt[(Ls[Tree], Tree)] = t match
     case Annotated(q, PossiblyAnnotated(qs, target)) => S(q :: qs, target)
@@ -275,11 +276,11 @@ trait TypeOrTermDef:
   def head: Tree
   
   type MaybeIdent = Diagnostic \/ Ident
-  
+
   lazy val (symbName, name, paramLists, typeParams, annotatedResultType)
       : (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) =
-    def rec(t: Tree, symbName: Opt[MaybeIdent], annot: Opt[Tree]): 
-      (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) = 
+    def rec(t: Tree, symbName: Opt[MaybeIdent], annot: Opt[Tree]):
+      (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) =
       t match
       
       case InfixApp(tree, Keyword.`:`, ann) =>
@@ -300,13 +301,13 @@ trait TypeOrTermDef:
       // fun f[T](n1: Int)(nn: Int)
       case Apps(App(PossiblyParenthesized(id: Ident), typeParams: TyTup), paramLists) =>
         (symbName, R(id), paramLists, S(typeParams), annot)
-      
+
       case Jux(id: Ident, rhs) =>
         val err = L:
           ErrorReport:
             msg"Invalid ${k.desc} definition head: unexpected ${rhs.describe} in this position" -> rhs.toLoc :: Nil
         (S(err), R(id), Nil, N, annot)
-      
+
       case Jux(lhs, rhs) => // happens in `fun (op) nme` form
         val sn = lhs match
           case Bra(BracketKind.Round, id: Ident) =>
@@ -321,14 +322,14 @@ trait TypeOrTermDef:
               ErrorReport:
                 msg"Invalid ${k.desc} definition head: unexpected ${lhs.describe} in this position" -> lhs.toLoc :: Nil
         rec(rhs, S(sn), annot)
-        
+
       case _ =>
         (N, L(ErrorReport(
           msg"Expected a valid ${k.desc} definition head; found ${t.describe} instead" -> t.toLoc :: Nil)),
           Nil, N, annot)
       
     rec(head, N, N)
-  
+
 end TypeOrTermDef
 
 
@@ -357,6 +358,6 @@ trait TypeDefImpl(using semantics.Elaborator.State) extends TypeOrTermDef:
         case (S(spd), id, _) => ??? // spreads are not allowed in class parameters
         case (N, id, _) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
       .toList
-    
+
   lazy val allSymbols = definedSymbols ++ clsParams.map(s => s.nme -> s).toMap
 

@@ -9,4 +9,6 @@ mut mut let x = 1
 //│ Parsed:
 //│ 	Modified(keyword 'mut',None,Modified(keyword 'mut',None,LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)))
 
-
+fun a(spec a) = 1
+//│ Parsed:
+//│ 	TermDef(Fun,App(Ident(a),Tup(List(Modified(keyword 'spec',None,Ident(a))))),Some(IntLit(1)))
