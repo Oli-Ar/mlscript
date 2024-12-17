@@ -1,0 +1,87 @@
+
+
+:spt
+fun id(spec a) = a
+id(1)
+id of "x"
+id(2)
+//│ Specialised tree:
+//│ Blk:
+//│   stats = Ls of 
+//│     TermDefinition:
+//│       owner = S of globalThis:block#1
+//│       k = Fun
+//│       sym = member:id_Int_16
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ParamListFlags of false
+//│           params = Ls of 
+//│             Param:
+//│               flags = (spec)
+//│               sym = a@11
+//│               sign = S of Sel:
+//│                 prefix = Ref of globalThis:import#Prelude
+//│                 nme = Ident of "Int"
+//│       sign = N
+//│       body = S of Ref of a@11
+//│       resSym = ‹result of member:id›@12
+//│     TermDefinition:
+//│       owner = S of globalThis:block#1
+//│       k = Fun
+//│       sym = member:id_Str_17
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ParamListFlags of false
+//│           params = Ls of 
+//│             Param:
+//│               flags = (spec)
+//│               sym = a@11
+//│               sign = S of Sel:
+//│                 prefix = Ref of globalThis:import#Prelude
+//│                 nme = Ident of "Str"
+//│       sign = N
+//│       body = S of Ref of a@11
+//│       resSym = ‹result of member:id›@12
+//│     TermDefinition:
+//│       owner = S of globalThis:block#1
+//│       k = Fun
+//│       sym = member:id
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ParamListFlags of false
+//│           params = Ls of 
+//│             Param:
+//│               flags = (spec)
+//│               sym = a@11
+//│               sign = N
+//│       sign = N
+//│       body = S of Ref of a@11
+//│       resSym = ‹result of member:id›@12
+//│     App:
+//│       lhs = Sel:
+//│         prefix = Ref of globalThis:block#1
+//│         nme = Ident of "id_Int_16"
+//│       rhs = Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           value = Lit of IntLit of 1
+//│           asc = N
+//│     App:
+//│       lhs = Sel:
+//│         prefix = Ref of globalThis:block#1
+//│         nme = Ident of "id_Str_17"
+//│       rhs = Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           value = Lit of StrLit of "x"
+//│           asc = N
+//│   res = App:
+//│     lhs = Sel:
+//│       prefix = Ref of globalThis:block#1
+//│       nme = Ident of "id_Int_16"
+//│     rhs = Tup of Ls of 
+//│       Fld:
+//│         flags = ()
+//│         value = Lit of IntLit of 2
+//│         asc = N
+
