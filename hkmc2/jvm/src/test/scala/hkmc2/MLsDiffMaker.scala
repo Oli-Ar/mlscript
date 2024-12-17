@@ -35,6 +35,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val silent = NullaryCommand("silent")
   val dbgElab = NullaryCommand("de")
   val dbgParsing = NullaryCommand("dp")
+  val dbgSpec = NullaryCommand("ds")
   
   val showParse = NullaryCommand("p")
   val showParsedTree = DebugTreeCommand("pt")
@@ -70,6 +71,10 @@ abstract class MLsDiffMaker extends DiffMaker:
       // * Perhaps this should be the default behavior of TraceLogger.
       if doTrace then super.trace(pre, post)(thunk)
       else thunk
+      
+  val stl = new TraceLogger:
+    override def doTrace = dbgSpec.isSet
+    override def emitDbg(str: String): Unit = output(str)
   
   var curCtx = Elaborator.State.init
   
@@ -188,8 +193,8 @@ abstract class MLsDiffMaker extends DiffMaker:
     showElaboratedTree.get.foreach: post =>
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
-    val spec = Specialiser(etl)
-    val spBlk = spec.specialise(e)
+    val spec = Specialiser(stl, curCtx)
+    val spBlk = spec.topLevel(e)
     showSpecialisedTree.get.foreach: post =>
       output(s"Specialised tree:")
       output(spBlk.showAsTree(using post))
