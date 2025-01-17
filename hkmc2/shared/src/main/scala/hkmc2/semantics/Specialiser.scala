@@ -37,12 +37,12 @@ class Specialiser(val tl: TraceLogger, val ctx: Ctx)(using val raise: Raise, val
     term match
       case Blk(Nil, res) => collectDefs(res)
       case Blk((d: Declaration) :: stats, res) => collectDefs(Blk(stats, res)) ++ (d match
-        case td@TermDefinition(_, Fun, sym, params, _, Some(body), _) =>
+        case td@TermDefinition(_, Fun, sym, params, _, Some(body), _, _, _) =>
           val map = collectDefs(body) ++ collectDefs(Blk(stats, res))
           if params.flatMap(_.params).exists(_.flags.spec) then map + (td.sym -> td) else map
         case _ => d.subTerms.foldLeft(Map.empty[Symbol, TermDefinition])((acc, sub) => acc ++ collectDefs(sub)))
       case Blk((t: Term) :: stats, res) => collectDefs(t) ++ collectDefs(Blk(stats, res))
-      case Blk(LetDecl(_) :: stats, res) => collectDefs(Blk(stats, res))
+      case Blk(LetDecl(_, _) :: stats, res) => collectDefs(Blk(stats, res))
       case Blk(DefineVar(_, rhs) :: stats, res) => collectDefs(rhs) ++ collectDefs(Blk(stats, res))
       case _ => term.subTerms.foldLeft(Map.empty)((acc, sub) => acc ++ collectDefs(sub))
   
@@ -59,14 +59,13 @@ class Specialiser(val tl: TraceLogger, val ctx: Ctx)(using val raise: Raise, val
           case s => (acc._1 :+ s, acc._2)
     collectApps(tree.res) match { case (res, ts) => (Blk(stats, res), types ::: ts) }
   
-  // TODO: Make specFns immutable so this can be nice and pure
   def collectApps(tree: Term)(using defs: Map[Symbol, TermDefinition], specFns: MutMap[Str, Ident]): Ctxl[(Term, Ls[SpApp])] =
     trace(s"Collecting term ${tree.showDbg}"):
       tree match
         case app@App(lhs, Tup(fields)) => lhs match
           case s@Sel(pre, nme) =>
             if s.sym.isDefined && defs.contains(s.sym.get) then
-              val typs = defs(s.sym.get).params.flatMap(_.params).zip(fields.map(_.value).map {
+              val typs = defs(s.sym.get).params.flatMap(_.params).zip(fields.filter(e => e.isInstanceOf[Fld]).map(_.asInstanceOf[Fld].term).map {
                 case Lit(lit) => lit.asTree match
                   case _: IntLit => "Int"
                   case _: StrLit => "Str"
@@ -75,13 +74,13 @@ class Specialiser(val tl: TraceLogger, val ctx: Ctx)(using val raise: Raise, val
               }).filter(_._1.flags.spec)
               log(s"Specialising ${s.sym.get} with ${typs.map((s, t) => s.sym.nme + ": " + t)}.")
               val fId = s.sym.get.nme + typs.map(_._2).mkString("_", "_", "")
-              val name = specFns.getOrElseUpdate(fId, Ident(fId + "_" + state.nextUid)) // not sure state is the way to do this
+              val name = specFns.getOrElseUpdate(fId, Ident(fId + "_" + state.suid.nextUid))
               val specApp: App = app.copy(lhs = s.copy(nme = name)(s.sym))(app.tree, app.resSym)
               (specApp, SpApp(s.sym.get, typs.foldLeft(Map.empty)((acc, p) => acc + (p._1.sym -> p._2)), specApp) :: Nil)
             else
               (tree, Nil)
           // FIXME: Ref applications aren't implemented, nor do I know when they are used
-          case Ref(sym) => if defs.contains(sym) then (tree, SpApp(TempSymbol(999, N, ""), Map.empty, app) :: Nil) else (tree, Nil)
+          case Ref(sym) => if defs.contains(sym) then (tree, SpApp(TempSymbol(N, ""), Map.empty, app) :: Nil) else (tree, Nil)
           case _ => (tree, Nil)
         case b: Blk => collectApps(b)
         // FIXME: This won't work for nested applications in all cases

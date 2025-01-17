@@ -189,7 +189,7 @@ enum Tree extends AutoLocated:
     case Spread(Keyword.`...`, _, S(und: Under)) => S(S(true), new Ident("_").withLocOf(und), N)
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) => S(N, lhs, S(rhs))
     case TermDef(ImmutVal, inner, _) => inner.asParam
-    case Modified(_, _, inner) => inner.param
+    case Modified(_, _, inner) => inner.asParam
 
   def isModuleModifier: Bool = this match
     case Tree.TypeDef(Mod, _, N, N) => true

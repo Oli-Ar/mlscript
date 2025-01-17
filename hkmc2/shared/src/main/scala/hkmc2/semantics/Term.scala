@@ -359,8 +359,9 @@ object FldFlags:
   val empty: FldFlags = FldFlags(false, false, false, false)
 
   def fromTerm(t: Tree): FldFlags = t match
-    case Tree.Modified(Keyword.`mut`, _, b) => FldFlags(true, false, false).addFlags(b)
-    case Tree.Modified(Keyword.`spec`, _, b) => FldFlags(false, true, false).addFlags(b)
+    case Tree.Modified(Keyword.`mut`, _, b) => FldFlags(true, false, false, false).addFlags(b)
+    case Tree.Modified(Keyword.`spec`, _, b) => FldFlags(false, true, false, false).addFlags(b)
+    case Tree.Modified(Keyword.`module`, _, b) => FldFlags(false, false, false, true).addFlags(b)
     case _ => empty
 
 sealed abstract class Elem:

@@ -904,7 +904,7 @@ extends Importer:
       ps
     case _ =>
       t.asParam.map: (isSpd, p, st) =>
-        isSpd -> Param(FldFlags.fromTerm(t), fieldOrVarSym(ParamBind, p), st.map(term))
+        isSpd -> Param(FldFlags.fromTerm(t), fieldOrVarSym(ParamBind, p), st.map(term(_)))
 
   def params(t: Tree): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>

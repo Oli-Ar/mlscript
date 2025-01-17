@@ -52,22 +52,6 @@ class MLsCompiler(preludeFile: os.Path):
   var dbgParsing = false
 
   def compileModule(file: os.Path): Unit =
-
-    val block = os.read(file)
-    val fph = new FastParseHelpers(block)
-    val origin = Origin(file.toString, 0, fph)
-
-    val lexer = new syntax.Lexer(origin, dbg = dbgParsing)
-    val tokens = lexer.bracketedTokens
-
-    // if showParse.isSet || dbgParsing.isSet then
-    //   output(syntax.Lexer.printTokens(tokens))
-
-    val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing):
-      def doPrintDbg(msg: => Str): Unit =
-        // if dbg then output(msg)
-        if dbg then println(msg)
-    val res = p.parseAll(p.block(allowNewlines = true))
     given Elaborator.State = new Elaborator.State
 
     val preludeParse = ParserSetup(preludeFile, dbgParsing)
