@@ -60,6 +60,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       dbgParsing.isSet
       || dbgElab.isSet
       || debug.isSet
+      || dbgSpec.isSet
   
   val etl = new TraceLogger:
     override def doTrace = dbgElab.isSet || scope.exists:
@@ -193,7 +194,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     showElaboratedTree.get.foreach: post =>
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
-    val spec = Specialiser(stl, curCtx)
+    val spec = Specialiser(stl)
     val spBlk = spec.topLevel(e)
     showSpecialisedTree.get.foreach: post =>
       output(s"Specialised tree:")

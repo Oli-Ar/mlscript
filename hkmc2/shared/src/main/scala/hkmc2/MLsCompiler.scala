@@ -67,12 +67,12 @@ class MLsCompiler(preludeFile: os.Path):
     newCtx.nest(N).givenIn:
 
       val (blk, newCtx) = elab.importFrom(mainParse.resultBlk)
-      val spec = Specialiser(stl, newCtx)
+      val spec = Specialiser(stl)
       val spBlk = spec.topLevel(blk)
       val low = ltl.givenIn:
         codegen.Lowering()
       val jsb = codegen.js.JSBuilder()
-      val le = low.program(spBlk)
+      val le = low.program(blk)
       val baseScp: utils.Scope =
         utils.Scope.empty
       val nestedScp = baseScp.nest

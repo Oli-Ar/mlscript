@@ -1,87 +1,46 @@
+:js
 
 
-:spt
-fun id(spec a) = a
-id(1)
-id of "x"
-id(2)
-//│ Specialised tree:
-//│ Blk:
-//│   stats = Ls of 
-//│     TermDefinition:
-//│       owner = S of globalThis:block#1
-//│       k = Fun
-//│       sym = member:id_Int_16
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = (spec)
-//│               sym = a@11
-//│               sign = S of Sel:
-//│                 prefix = Ref of globalThis:import#Prelude
-//│                 nme = Ident of "Int"
-//│       sign = N
-//│       body = S of Ref of a@11
-//│       resSym = ‹result of member:id›@12
-//│     TermDefinition:
-//│       owner = S of globalThis:block#1
-//│       k = Fun
-//│       sym = member:id_Str_17
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = (spec)
-//│               sym = a@11
-//│               sign = S of Sel:
-//│                 prefix = Ref of globalThis:import#Prelude
-//│                 nme = Ident of "Str"
-//│       sign = N
-//│       body = S of Ref of a@11
-//│       resSym = ‹result of member:id›@12
-//│     TermDefinition:
-//│       owner = S of globalThis:block#1
-//│       k = Fun
-//│       sym = member:id
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = (spec)
-//│               sym = a@11
-//│               sign = N
-//│       sign = N
-//│       body = S of Ref of a@11
-//│       resSym = ‹result of member:id›@12
-//│     App:
-//│       lhs = Sel:
-//│         prefix = Ref of globalThis:block#1
-//│         nme = Ident of "id_Int_16"
-//│       rhs = Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           value = Lit of IntLit of 1
-//│           asc = N
-//│     App:
-//│       lhs = Sel:
-//│         prefix = Ref of globalThis:block#1
-//│         nme = Ident of "id_Str_17"
-//│       rhs = Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           value = Lit of StrLit of "x"
-//│           asc = N
-//│   res = App:
-//│     lhs = Sel:
-//│       prefix = Ref of globalThis:block#1
-//│       nme = Ident of "id_Int_16"
-//│     rhs = Tup of Ls of 
-//│       Fld:
-//│         flags = ()
-//│         value = Lit of IntLit of 2
-//│         asc = N
-
+:ds
+:sjs
+fun id1(a) = a
+fun id2(b) = b
+let x = 1
+id1(x)
+id1(1)
+id2("2")
+//│ Specialising block { ‹› fun member:id1‹116›(Param(‹›,a‹117›,None), ) = a‹117›#666; ‹› fun member:id2‹115›(Param(‹›,b‹119›,None), ) = b‹119›#666; let globalThis:block#1‹114›.x; globalThis:block#1‹114›.x = 1; globalThis:block#1‹114›#666(.)id1‹member:id1‹116››(globalThis:block#1‹114›.x#666); globalThis:block#1‹114›#666(.)id1‹member:id1‹116››(1); globalThis:block#1‹114›#666(.)id2‹member:id2‹115››("2") }
+//│ | Specialising ‹› fun member:id1‹116›(Param(‹›,a‹117›,None), ) = a‹117›#666
+//│ | Specialising ‹› fun member:id2‹115›(Param(‹›,b‹119›,None), ) = b‹119›#666
+//│ | Specialising let globalThis:block#1‹114›.x
+//│ | Specialising globalThis:block#1‹114›.x = 1
+//│ | Specialising globalThis:block#1‹114›#666(.)id1‹member:id1‹116››(globalThis:block#1‹114›.x#666)
+//│ | Specialising term globalThis:block#1‹114›#666(.)id1‹member:id1‹116››(globalThis:block#1‹114›.x#666)
+//│ | Specialising globalThis:block#1‹114›#666(.)id1‹member:id1‹116››(1)
+//│ | Specialising term globalThis:block#1‹114›#666(.)id1‹member:id1‹116››(1)
+//│ | Specialising block end. 
+//│ | >  
+//│ | Specialising term globalThis:block#1‹114›#666(.)id2‹member:id2‹115››("2")
+//│ | Ctx: x -> Binding(globalThis:block#1‹114›.x,Some(Ref(globalThis:import#Prelude‹125›)))
+//│ | Work Queue: Queue(TermDefinition(Some(globalThis:block#1‹114›),Fun,member:id1‹116›,List(ParamList(‹›,List(Param(‹›,a‹117›,None)),None)),None,Some(Ref(a‹117›)),‹result of member:id1‹116››‹118›,‹›,List()), TermDefinition(Some(globalThis:block#1‹114›),Fun,member:id2‹115›,List(ParamList(‹›,List(Param(‹›,b‹119›,None)),None)),None,Some(Ref(b‹119›)),‹result of member:id2‹115››‹120›,‹›,List()))
+//│ | Applications: Map(id1 -> List(Ref(globalThis:import#Prelude‹125›)), id2 -> List(Ref(globalThis:import#Prelude‹126›)))
+//│ JS (unsanitized):
+//│ let tmp, tmp1;
+//│ function id2_Str_09aKInnLz0(b) {
+//│   return b;
+//│ }
+//│ function id1_Int_DRaDBEukH1(a) {
+//│   return a;
+//│ }
+//│ function id1(a) {
+//│   return a;
+//│ }
+//│ function id2(b) {
+//│   return b;
+//│ }
+//│ this.x = 1;
+//│ tmp = this.id1_Int_DRaDBEukH1(this.x);
+//│ tmp1 = this.id1_Int_DRaDBEukH1(1);
+//│ this.id2_Str_09aKInnLz0("2")
+//│ = '2'
+//│ x = 1
